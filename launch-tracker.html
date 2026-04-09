@@ -494,9 +494,17 @@
         // Fetch launch data from RocketLaunch API
         async function fetchLaunches() {
             try {
+                console.log('Starting to fetch launch data...');
                 // Using RocketLaunch.Live API (free, no auth required)
                 const response = await fetch('https://api.rocketlaunch.live/v4/launches?limit=100');
+                console.log('API response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`API returned status ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('API data received:', data);
                 
                 if (data.result && data.result.length > 0) {
                     allLaunches = data.result
@@ -504,14 +512,17 @@
                         .sort((a, b) => new Date(a.net) - new Date(b.net))
                         .slice(0, 50);
                     
+                    console.log('Filtered launches count:', allLaunches.length);
                     displayLaunches();
                     updateStats();
                     startCountdown();
                 } else {
-                    showError('No upcoming launches found');
+                    console.warn('No launch data in API response, using fallback');
+                    loadFallbackData();
                 }
             } catch (error) {
                 console.error('Error fetching launches:', error);
+                console.warn('Loading fallback data...');
                 // Fallback to curated dataset
                 loadFallbackData();
             }
